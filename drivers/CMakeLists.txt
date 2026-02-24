@@ -26,19 +26,35 @@ target_link_libraries(pico_drivers_c_display INTERFACE
     hardware_spi
 )
 
+# Touch C driver (XPT2046)
+add_library(pico_drivers_c_touch INTERFACE)
+target_sources(pico_drivers_c_touch INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}/c_drivers/touch/xpt2046.c
+)
+target_include_directories(pico_drivers_c_touch INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}/c_drivers/touch
+)
+target_link_libraries(pico_drivers_c_touch INTERFACE
+    pico_stdlib
+    hardware_spi
+)
+
 # C++ wrappers library
 add_library(pico_drivers_cpp STATIC
     ${CMAKE_CURRENT_LIST_DIR}/cpp_wrappers/LoRa.cpp
     ${CMAKE_CURRENT_LIST_DIR}/cpp_wrappers/Display.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/cpp_wrappers/Touch.cpp
 )
 target_include_directories(pico_drivers_cpp PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/cpp_wrappers
     ${CMAKE_CURRENT_LIST_DIR}/c_drivers/lora
     ${CMAKE_CURRENT_LIST_DIR}/c_drivers/display
+    ${CMAKE_CURRENT_LIST_DIR}/c_drivers/touch
 )
 target_link_libraries(pico_drivers_cpp PUBLIC
     pico_drivers_c_lora
     pico_drivers_c_display
+    pico_drivers_c_touch
     pico_stdlib
 )
 
