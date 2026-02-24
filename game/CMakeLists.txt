@@ -6,6 +6,8 @@ add_library(pico_game STATIC
     ${CMAKE_CURRENT_LIST_DIR}/GameObject.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Screen.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Sprite.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Joystick.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/AudioChannel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xpt2046.c
 )
 
@@ -17,6 +19,8 @@ target_include_directories(pico_game PUBLIC
 target_link_libraries(pico_game PUBLIC
     pico_stdlib
     hardware_spi
+    hardware_adc
+    hardware_pwm
     displaylib_16
 )
 

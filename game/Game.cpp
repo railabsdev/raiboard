@@ -83,7 +83,7 @@ void Game::renderSprite(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
 }
 
 void Game::renderSpriteOutline(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
-    screen.display().drawRect(x, y, width, height, color);
+    screen.display().drawRectWH(x, y, width, height, color);
 }
 
 void Game::renderCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) {

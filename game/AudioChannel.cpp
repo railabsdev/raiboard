@@ -1,4 +1,4 @@
-#include "audio_channel.hpp"
+#include "AudioChannel.hpp"
 
 AudioChannel::AudioChannel(uint pin) 
     : pin_(pin), slice_num_(0), initialized_(false) {

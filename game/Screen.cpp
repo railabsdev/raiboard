@@ -4,7 +4,7 @@
 Screen::Screen() {
     display_.SetupGPIO(20, 21, 17, 18, 19, 16);
     display_.SetupScreenSize(240, 320);
-    display_.SetupSPI(25000000, spi0);
+    display_.SetupSPI(62500000, spi0);
     display_.ILI9341Initialize();
     
     ts_spi_setup();  // Initialize touch screen

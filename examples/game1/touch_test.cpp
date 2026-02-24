@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "pico/stdlib.h"
-#include "screen.hpp"
+#include "Screen.hpp"
 
 int main() {
     stdio_init_all();

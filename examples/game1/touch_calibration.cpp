@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "screen.hpp"
+#include "Screen.hpp"
 #include "xpt2046.h"
 
 int main() {

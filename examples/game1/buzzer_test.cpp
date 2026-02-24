@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "audio_channel.hpp"
+#include "AudioChannel.hpp"
 
 #define BUZZER_PIN 14
 

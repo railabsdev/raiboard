@@ -1,10 +1,12 @@
-#include <stdio.h>
-#include <vector>
-#include "pico/stdlib.h"
-#include "screen.hpp"
-#include "sprite.hpp"
+#include "Game.hpp"
+#include "Sprite.hpp"
+#include "Screen.hpp"
+#include "Joystick.hpp"
+#include "AudioChannel.hpp"
 #include "assets.hpp"
-#include "audio_channel.hpp"
+#include "Vector.hpp"
+#include <vector>
+#include <cstdlib>
 
 #define BUZZER_PIN 14
 #define MAX_COINS 5
@@ -18,57 +20,55 @@ struct FallingObject {
     bool active;
 };
 
-class Game {
+class CoinGame : public Game {
 private:
-    Screen screen;
+    Joystick joystick;
     AudioChannel audio;
     Sprite player;
     std::vector<FallingObject> silverCoins;
     std::vector<FallingObject> asteroids;
+    Screen& gameScreen;
 
+    static constexpr float GRAVITY = 0.3f;
     static constexpr int SILVER_COIN_MOVE_SPEED = 0;
     static constexpr int ASTEROID_MOVE_SPEED = 10;
-    static constexpr int PLAYER_MOVE_SPEED = 5;
-    static constexpr float GRAVITY = 0.3f;
     
     uint32_t frame_count = 0;
     uint32_t silver_coin_last_spawn_time = 0;
     uint32_t asteroid_last_spawn_time = 0;
-    int old_player_x = 0;
-    int old_player_y = 0;
+    Vector2 old_player_pos;
     
 public:
-    Game() : audio(BUZZER_PIN), player(PLAYER_SPRITE, PLAYER_WIDTH, PLAYER_HEIGHT, 0x0000) {
+    CoinGame(Screen& scr) 
+        : Game(scr), 
+          audio(BUZZER_PIN), 
+          player(PLAYER_SPRITE, PLAYER_WIDTH, PLAYER_HEIGHT),
+          gameScreen(scr)
+    {
         silverCoins.resize(MAX_COINS);
         asteroids.resize(MAX_ASTEROIDS);
     }
     
-    ~Game() {
+    ~CoinGame() override {
         cleanup();
     }
     
-    void init() {
-        stdio_init_all();
-        sleep_ms(1000);
-        
+    void onInit() override {
         audio.init();
-        ILI9341_TFT &display = screen.display();
-        display.fillScreen(display.C_BLACK);
-    }
-    
-    void start() {
-        player.setPosition(120, 280);
-        old_player_x = player.getX();
-        old_player_y = player.getY();
+        getScreen().display().fillScreen(getScreen().display().C_BLACK);
+        
+        // Initialize player position
+        player.setPosition(Vector2(120, 280));
+        old_player_pos = player.getPosition();
         
         for (int i = 0; i < MAX_COINS; i++) {
-            silverCoins[i].sprite = new Sprite(SILVER_COIN_SPRITE, SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT, 0x0000);
+            silverCoins[i].sprite = new Sprite(SILVER_COIN_SPRITE, SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT);
             silverCoins[i].active = false;
             silverCoins[i].velocity = 0;
         }
 
         for (int i = 0; i < MAX_ASTEROIDS; i++) {
-            asteroids[i].sprite = new Sprite(ASTEROID_SPRITE, ASTEROID_WIDTH, ASTEROID_HEIGHT, 0x0000);
+            asteroids[i].sprite = new Sprite(ASTEROID_SPRITE, ASTEROID_WIDTH, ASTEROID_HEIGHT);
             asteroids[i].active = false;
             asteroids[i].velocity = 0;
         }
@@ -78,7 +78,7 @@ public:
         asteroid_last_spawn_time = 0;
     }
     
-    void update() {
+    void onUpdate(float deltaTime) override {
         frame_count++;
         handleInput();
         handleCollisions();
@@ -86,84 +86,95 @@ public:
         spawnAsteroids();
     }
     
-    void render() {
-        ILI9341_TFT &display = screen.display();
-        player.draw(display);
+    void onRender() override {
+        player.render(getScreen().display());
+    }
+    
+    void onShutdown() override {
+        cleanup();
     }
     
 private:
     void handleInput() {
-        ILI9341_TFT &display = screen.display();
-        uint16_t touch_x, touch_y;
+        ILI9341_TFT &display = getScreen().display();
         
-        if (screen.readTouch(touch_x, touch_y)) {
-            display.fillRect(old_player_x, old_player_y, PLAYER_WIDTH, PLAYER_HEIGHT, display.C_BLACK);
+        // Get joystick direction with sensitivity
+        int16_t dx = 0, dy = 0;
+        joystick.getDirection(dx, dy, 5.0f);  // 5 pixels per frame max
+        
+        if (dx != 0 || dy != 0) {
+            Vector2 pos = player.getPosition();
+            display.fillRect((int)pos.x, (int)pos.y, PLAYER_WIDTH, PLAYER_HEIGHT, display.C_BLACK);
             
-            int sprite_x = player.getX();
-            int sprite_y = player.getY();
+            int sprite_x = (int)pos.x + dx;
+            int sprite_y = (int)pos.y + dy;
             
-            if (touch_x < sprite_x) sprite_x -= PLAYER_MOVE_SPEED;
-            if (touch_x > sprite_x) sprite_x += PLAYER_MOVE_SPEED;
-            if (touch_y < sprite_y) sprite_y -= PLAYER_MOVE_SPEED;
-            if (touch_y > sprite_y) sprite_y += PLAYER_MOVE_SPEED;
+            // Keep player on screen
+            sprite_x = std::max(0, std::min(sprite_x, 240 - PLAYER_WIDTH));
+            sprite_y = std::max(0, std::min(sprite_y, 320 - PLAYER_HEIGHT));
             
-            player.setPosition(sprite_x, sprite_y);
-            old_player_x = sprite_x;
-            old_player_y = sprite_y;
+            player.setPosition(Vector2(sprite_x, sprite_y));
+            old_player_pos = player.getPosition();
         }
     }
     
     void handleCollisions() {
-        ILI9341_TFT &display = screen.display();
+        ILI9341_TFT &display = getScreen().display();
         
+        // Update coins
         for (int i = 0; i < MAX_COINS; i++) {
             if (silverCoins[i].active) {
-                int old_coin_y = silverCoins[i].sprite->getY();
+                Vector2 pos = silverCoins[i].sprite->getPosition();
+                int coin_x = (int)pos.x;
+                int coin_y = (int)pos.y;
                 
                 silverCoins[i].velocity += GRAVITY;
-                int new_y = old_coin_y + (int)silverCoins[i].velocity + SILVER_COIN_MOVE_SPEED;
+                int new_y = coin_y + (int)silverCoins[i].velocity + SILVER_COIN_MOVE_SPEED;
                 
-                display.fillRect(silverCoins[i].sprite->getX(), old_coin_y, SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT, display.C_BLACK);
+                display.fillRect(coin_x, coin_y, SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT, display.C_BLACK);
                 
                 if (new_y > 320) {
                     silverCoins[i].active = false;
                     continue;
                 }
                 
-                silverCoins[i].sprite->setPosition(silverCoins[i].sprite->getX(), new_y);
+                silverCoins[i].sprite->setPosition(Vector2(coin_x, new_y));
                 
                 if (player.collidesWith(*silverCoins[i].sprite)) {
                     silverCoins[i].active = false;
-                    display.fillRect(silverCoins[i].sprite->getX(), silverCoins[i].sprite->getY(), SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT, display.C_BLACK);
+                    display.fillRect(coin_x, new_y, SILVER_COIN_WIDTH, SILVER_COIN_HEIGHT, display.C_BLACK);
                     audio.playCoin();
                 } else {
-                    silverCoins[i].sprite->draw(display);
+                    silverCoins[i].sprite->render(display);
                 }
             }
         }
 
+        // Update asteroids
         for (int i = 0; i < MAX_ASTEROIDS; i++) {
             if (asteroids[i].active) {
-                int old_asteroid_y = asteroids[i].sprite->getY();
+                Vector2 pos = asteroids[i].sprite->getPosition();
+                int ast_x = (int)pos.x;
+                int ast_y = (int)pos.y;
                 
                 asteroids[i].velocity += GRAVITY;
-                int new_y = old_asteroid_y + (int)asteroids[i].velocity + ASTEROID_MOVE_SPEED;
+                int new_y = ast_y + (int)asteroids[i].velocity + ASTEROID_MOVE_SPEED;
                 
-                display.fillRect(asteroids[i].sprite->getX(), old_asteroid_y, ASTEROID_WIDTH, ASTEROID_HEIGHT, display.C_BLACK);
+                display.fillRect(ast_x, ast_y, ASTEROID_WIDTH, ASTEROID_HEIGHT, display.C_BLACK);
                 
                 if (new_y > 320) {
                     asteroids[i].active = false;
                     continue;
                 }
                 
-                asteroids[i].sprite->setPosition(asteroids[i].sprite->getX(), new_y);
+                asteroids[i].sprite->setPosition(Vector2(ast_x, new_y));
                 
                 if (player.collidesWith(*asteroids[i].sprite)) {
                     asteroids[i].active = false;
-                    display.fillRect(asteroids[i].sprite->getX(), asteroids[i].sprite->getY(), ASTEROID_WIDTH, ASTEROID_HEIGHT, display.C_BLACK);
+                    display.fillRect(ast_x, new_y, ASTEROID_WIDTH, ASTEROID_HEIGHT, display.C_BLACK);
                     audio.playHit();
                 } else {
-                    asteroids[i].sprite->draw(display);
+                    asteroids[i].sprite->render(display);
                 }
             }
         }
@@ -176,7 +187,7 @@ private:
             for (int i = 0; i < MAX_COINS; i++) {
                 if (!silverCoins[i].active) {
                     int random_x = (frame_count * 37 + i * 17) % (240 - SILVER_COIN_WIDTH);
-                    silverCoins[i].sprite->setPosition(random_x, 0);
+                    silverCoins[i].sprite->setPosition(Vector2(random_x, 0));
                     silverCoins[i].velocity = 1.0f;
                     silverCoins[i].active = true;
                     silver_coin_last_spawn_time = current_time;
@@ -193,7 +204,7 @@ private:
             for (int i = 0; i < MAX_ASTEROIDS; i++) {
                 if (!asteroids[i].active) {
                     int random_x = (frame_count * 43 + i * 23) % (240 - ASTEROID_WIDTH);
-                    asteroids[i].sprite->setPosition(random_x, 0);
+                    asteroids[i].sprite->setPosition(Vector2(random_x, 0));
                     asteroids[i].velocity = 1.0f;
                     asteroids[i].active = true;
                     asteroid_last_spawn_time = current_time;
@@ -205,10 +216,16 @@ private:
 
     void cleanup() {
         for (int i = 0; i < MAX_COINS; i++) {
-            delete silverCoins[i].sprite;
+            if (silverCoins[i].sprite) {
+                delete silverCoins[i].sprite;
+                silverCoins[i].sprite = nullptr;
+            }
         }
         for (int i = 0; i < MAX_ASTEROIDS; i++) {
-            delete asteroids[i].sprite;
+            if (asteroids[i].sprite) {
+                delete asteroids[i].sprite;
+                asteroids[i].sprite = nullptr;
+            }
         }
     }
 };
