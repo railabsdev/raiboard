@@ -56,3 +56,4 @@ pico_sdk_init()
 # pico_add_extra_outputs(raiboard)
 
 add_subdirectory(drivers)
+add_subdirectory(game)
