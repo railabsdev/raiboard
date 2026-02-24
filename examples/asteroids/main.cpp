@@ -1,17 +1,18 @@
 #include "../../drivers/cpp_wrappers/Display.hpp"
 #include "AsteroidsGame.hpp"
 
+#include "game.cpp"
+
 int main() {
-    Display display;
-    // Initialize display - replace pins and spi instance with your board setup
-    display.init(-1, -1, -1, -1, -1, -1, nullptr, 25000000);
+    Game1 game;
+    game.init();
+    game.start();
 
-    // Initialize touch wrapper
-    Touch touch;
-    touch.init();
-
-    AsteroidsGame game(display, &touch);
-    game.run();
-
+    while (true) {
+        game.update();
+        game.render();
+        sleep_ms(16);
+    }
+    
     return 0;
 }

@@ -40,4 +40,5 @@ public:
             }
         }
     }
+    Type getType() const override { return Type::Player; }
 };

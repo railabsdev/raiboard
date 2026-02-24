@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "Vector.hpp"
 #include "BoxCollider.hpp"
-#include "Display.hpp"
+#include "displaylib_16/ili9341.hpp"
 
 class GameObject {
 protected:
@@ -27,13 +27,21 @@ public:
 
     virtual ~GameObject() = default;
 
+        enum class Type {
+            Generic,
+            Player,
+            Asteroid
+        };
+
+        virtual Type getType() const { return Type::Generic; }
+
     // Update method - called every frame, user should override
     virtual void update(float deltaTime) {
         position = position + (velocity * deltaTime);
     }
 
     // Render method - called every frame, user should override
-    virtual void render(Display& display) = 0;
+    virtual void render(ILI9341_TFT& display) = 0;
 
     // Getters
     Vector2 getPosition() const { return position; }

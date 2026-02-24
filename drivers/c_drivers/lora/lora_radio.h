@@ -1,7 +1,10 @@
 /**
  * @file lora_radio.h
  * @brief Bare-bones C LoRa radio driver for SX126x
- * @author RaiLabs
+ * @author Custom driver
+ * 
+ * This is a simplified, minimal LoRa SX126x radio driver.
+ * Handles initialization, TX/RX, and polling.
  */
 
 #ifndef LORA_RADIO_H
@@ -15,14 +18,14 @@
 extern "C" {
 #endif
 
-/*  Configuration */
+/* ===== Configuration Constants ===== */
 #define LORA_DEFAULT_FREQ_HZ        915000000
 #define LORA_DEFAULT_TX_POWER       14
 #define LORA_DEFAULT_SPREADING_FACTOR 12
 #define LORA_MAX_PAYLOAD            255
 #define LORA_BUFFER_SIZE            255
 
-/*  LoRa Operating Modes  */
+/* ===== LoRa Operating Modes ===== */
 typedef enum {
     LORA_MODE_IDLE,
     LORA_MODE_TX,
@@ -30,7 +33,7 @@ typedef enum {
     LORA_MODE_ERROR
 } lora_mode_t;
 
-/*  LoRa Bandwidth (MHz)  */
+/* ===== LoRa Bandwidth (MHz) ===== */
 typedef enum {
     LORA_BW_7_8   = 0,
     LORA_BW_10    = 1,
@@ -44,7 +47,7 @@ typedef enum {
     LORA_BW_500   = 9
 } lora_bandwidth_t;
 
-/*  LoRa Spreading Factor  */
+/* ===== LoRa Spreading Factor ===== */
 typedef enum {
     LORA_SF_5  = 5,
     LORA_SF_6  = 6,
@@ -56,7 +59,7 @@ typedef enum {
     LORA_SF_12 = 12
 } lora_spreading_factor_t;
 
-/*  LoRa Configuration  */
+/* ===== LoRa Configuration ===== */
 typedef struct {
     uint32_t frequency_hz;
     int8_t tx_power_dbm;
@@ -69,10 +72,10 @@ typedef struct {
     bool iq_inverted;
 } lora_config_t;
 
-/*  RX Callback  */
+/* ===== RX Callback ===== */
 typedef void (*lora_rx_callback_t)(const uint8_t* payload, uint16_t length, int16_t rssi, int8_t snr);
 
-/*  LoRa Handle  */
+/* ===== LoRa Handle ===== */
 typedef struct {
     bool initialized;
     lora_config_t config;
@@ -86,7 +89,7 @@ typedef struct {
     lora_rx_callback_t on_rx;
 } lora_handle_t;
 
-/*  Public API  */
+/* ===== Public API ===== */
 
 /**
  * @brief Initialize LoRa radio with default config

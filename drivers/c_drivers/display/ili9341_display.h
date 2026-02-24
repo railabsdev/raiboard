@@ -1,7 +1,10 @@
 /**
  * @file ili9341_display.h
  * @brief Bare-bones C display driver for ILI9341
- * @author RaiLabs
+ * @author Custom driver
+ * 
+ * Minimal ILI9341 TFT display driver.
+ * Handles initialization, pixel writing, rectangles, text, and SPI communication.
  */
 
 #ifndef ILI9341_DISPLAY_H
@@ -15,12 +18,12 @@
 extern "C" {
 #endif
 
-/*  Display Dimensions  */
+/* ===== Display Dimensions ===== */
 #define DISPLAY_WIDTH       240
 #define DISPLAY_HEIGHT      320
 #define DISPLAY_BUFFER_SIZE (DISPLAY_WIDTH * DISPLAY_HEIGHT * 2)
 
-/*  16-bit RGB565 Color Definitions  */
+/* ===== 16-bit RGB565 Color Definitions ===== */
 typedef enum {
     COLOR_BLACK    = 0x0000,
     COLOR_WHITE    = 0xFFFF,
@@ -36,7 +39,7 @@ typedef enum {
     COLOR_PURPLE   = 0x780F
 } display_color_t;
 
-/*  Display Rotation  */
+/* ===== Display Rotation ===== */
 typedef enum {
     DISPLAY_ROTATION_0   = 0,
     DISPLAY_ROTATION_90  = 1,
@@ -44,8 +47,9 @@ typedef enum {
     DISPLAY_ROTATION_270 = 3
 } display_rotation_t;
 
-/*  Display Handle  */
+/* ===== Display Handle ===== */
 typedef struct {
+    /* GPIO Pins */
     int8_t pin_rst;
     int8_t pin_dc;
     int8_t pin_cs;
@@ -54,7 +58,7 @@ typedef struct {
     int8_t pin_miso;
 
     /* SPI Configuration */
-    void* spi_instance;      /* spi0 / spi1 */
+    void* spi_instance;      /* spi0 or spi1 */
     uint32_t spi_speed_hz;
     bool use_hardware_spi;
 
@@ -70,7 +74,7 @@ typedef struct {
     bool text_wrap;
 } display_handle_t;
 
-/*  API  */
+/* ===== Public API ===== */
 
 /**
  * @brief Initialize display with default single-color mode

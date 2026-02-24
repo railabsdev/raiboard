@@ -1,8 +1,9 @@
 #include "Game.hpp"
 #include <algorithm>
+#include "pico/stdlib.h"
 
-Game::Game(Display& disp)
-    : display(disp), running(true), deltaTime(0.016f), frameCount(0) {}
+Game::Game(Screen& scr)
+    : screen(scr), running(true), deltaTime(0.016f), frameCount(0) {}
 
 void Game::run() {
     onInit();
@@ -11,6 +12,7 @@ void Game::run() {
         update();
         render();
         frameCount++;
+        sleep_ms(16);  // ~60 FPS
     }
 
     onShutdown();
@@ -51,7 +53,7 @@ void Game::update() {
 
 void Game::render() {
     // Clear display
-    display.fillScreen(0x0000); // Black
+    screen.display().fillScreen(0x0000); // Black
 
     // Call user-defined rendering
     onRender();
@@ -59,11 +61,9 @@ void Game::render() {
     // Render all visible game objects
     for (auto& obj : gameObjects) {
         if (obj->isActive() && obj->isVisible()) {
-            obj->render(display);
+            obj->render(screen.display());
         }
     }
-
-    // No explicit flush available on Display wrapper; assume draw calls take effect immediately
 }
 
 void Game::checkCollisions() {
@@ -79,11 +79,11 @@ void Game::checkCollisions() {
 }
 
 void Game::renderSprite(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
-    display.fillRect(x, y, width, height, color);
+    screen.display().fillRect(x, y, width, height, color);
 }
 
 void Game::renderSpriteOutline(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color) {
-    display.drawRect(x, y, width, height, color);
+    screen.display().drawRect(x, y, width, height, color);
 }
 
 void Game::renderCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) {
@@ -96,7 +96,7 @@ void Game::renderCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color)
     int16_t d = 1 - r;
 
     auto plot8 = [&](int16_t px, int16_t py) {
-        display.drawPixel((uint16_t)px, (uint16_t)py, color);
+        screen.display().drawPixel((uint16_t)px, (uint16_t)py, color);
     };
 
     while (dx <= dy) {
@@ -123,14 +123,14 @@ void Game::renderFilledCircle(uint16_t centerX, uint16_t centerY, uint16_t radiu
     for (int16_t y = -radius; y <= radius; y++) {
         for (int16_t x = -radius; x <= radius; x++) {
             if (x * x + y * y <= radius * radius) {
-                display.drawPixel(centerX + x, centerY + y, color);
+                screen.display().drawPixel(centerX + x, centerY + y, color);
             }
         }
     }
 }
 
 void Game::renderLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
-    display.drawLine(x1, y1, x2, y2, color);
+    screen.display().drawLine(x1, y1, x2, y2, color);
 }
 
 void Game::renderBitmap(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
@@ -138,7 +138,7 @@ void Game::renderBitmap(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
     for (uint16_t row = 0; row < height; row++) {
         for (uint16_t col = 0; col < width; col++) {
             uint16_t color = pixelData[row * width + col];
-            display.drawPixel(x + col, y + row, color);
+            screen.display().drawPixel(x + col, y + row, color);
         }
     }
 }
@@ -149,7 +149,7 @@ void Game::renderBitmapTransparent(uint16_t x, uint16_t y, uint16_t width, uint1
         for (uint16_t col = 0; col < width; col++) {
             uint16_t color = pixelData[row * width + col];
             if (color != transparentColor) {
-                display.drawPixel(x + col, y + row, color);
+                screen.display().drawPixel(x + col, y + row, color);
             }
         }
     }
@@ -189,6 +189,10 @@ void Game::clearGameObjects() {
     gameObjects.clear();
 }
 
-Display& Game::getDisplay() {
-    return display;
+Screen& Game::getScreen() {
+    return screen;
+}
+
+ILI9341_TFT& Game::getDisplay() {
+    return screen.display();
 }

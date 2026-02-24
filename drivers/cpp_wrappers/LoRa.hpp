@@ -1,7 +1,9 @@
 /**
  * @file LoRa.hpp
  * @brief C++ wrapper for LoRa radio driver
- * @author RaiLabs
+ * @author Custom driver
+ * 
+ * Object-oriented C++ interface for the bare-bones C LoRa driver.
  */
 
 #ifndef LORA_HPP

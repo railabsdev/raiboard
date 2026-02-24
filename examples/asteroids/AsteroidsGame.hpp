@@ -32,11 +32,11 @@ public:
         spawnTimer++;
         if (spawnTimer >= spawnInterval) {
             spawnTimer = 0;
-            // Count current asteroids
+            // Count current asteroids (no RTTI)
             size_t count = 0;
             for (size_t i = 0; i < getGameObjectCount(); ++i) {
                 GameObject* obj = getGameObjectAt(i);
-                if (obj && dynamic_cast<Asteroid*>(obj)) count++;
+                if (obj && obj->getType() == GameObject::Type::Asteroid) count++;
             }
             if (count < MAX_ASTEROIDS) {
                 spawnAsteroid();
@@ -45,16 +45,13 @@ public:
 
         // Remove off-screen asteroids
         for (size_t i = 0; i < getGameObjectCount(); ++i) {
-            GameObject* obj = getGameObjectAt(i);
-            if (obj) {
-                Asteroid* a = dynamic_cast<Asteroid*>(obj);
-                if (a) {
+                GameObject* obj = getGameObjectAt(i);
+                if (obj && obj->getType() == GameObject::Type::Asteroid) {
+                    Asteroid* a = static_cast<Asteroid*>(obj);
                     if (a->getPosition().y > (float)display.getHeight()) {
-                        // deactivate
                         a->setActive(false);
                     }
                 }
-            }
         }
 
         // If player inactive, stop game
@@ -69,12 +66,17 @@ public:
 
     void onCollision(GameObject& a, GameObject& b) override {
         // If player collides with asteroid -> game over
-        Asteroid* ast = dynamic_cast<Asteroid*>(&a);
-        Player* pl = dynamic_cast<Player*>(&a);
-        if (!ast) ast = dynamic_cast<Asteroid*>(&b);
-        if (!pl) pl = dynamic_cast<Player*>(&b);
-        if (ast && pl) {
-            pl->setActive(false);
+        // Use type IDs to avoid RTTI
+        GameObject::Type ta = a.getType();
+        GameObject::Type tb = b.getType();
+        if ((ta == GameObject::Type::Asteroid && tb == GameObject::Type::Player) ||
+            (tb == GameObject::Type::Asteroid && ta == GameObject::Type::Player)) {
+            // find which is player
+            if (ta == GameObject::Type::Player) {
+                static_cast<Player&>(a).setActive(false);
+            } else {
+                static_cast<Player&>(b).setActive(false);
+            }
         }
     }
 

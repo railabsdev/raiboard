@@ -1,7 +1,9 @@
 /**
  * @file Display.hpp
  * @brief C++ wrapper for ILI9341 display driver
- * @author RaiLabs
+ * @author Custom driver
+ * 
+ * Object-oriented C++ interface for the bare-bones C display driver.
  */
 
 #ifndef DISPLAY_HPP

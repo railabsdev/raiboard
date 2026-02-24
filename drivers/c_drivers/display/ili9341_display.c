@@ -1,11 +1,15 @@
 /**
  * @file ili9341_display.c
  * @brief Bare-bones C display driver implementation for ILI9341
+ * 
+ * This is a minimal implementation focusing on core functionality.
+ * It wraps the displaylib_16 library with a clean, simplified C API.
  */
 
 #include "ili9341_display.h"
 #include <string.h>
 
+/* Forward declarations of external displaylib_16 functions */
 extern void ILI9341_SetupGPIO(int8_t rst, int8_t dc, int8_t cs, int8_t sclk, int8_t mosi, int8_t miso);
 extern void ILI9341_SetupScreenSize(uint16_t w, uint16_t h);
 extern void ILI9341_SetupSPI_HW(uint32_t speed_hz, void* spi_inst);
@@ -123,7 +127,7 @@ static const uint8_t font_5x8[96][5] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00 }  /* DEL */
 };
 
-/*  API   */
+/* ===== API Implementation ===== */
 
 bool display_init(display_handle_t* display,
                   int8_t rst, int8_t dc, int8_t cs, 
@@ -198,6 +202,7 @@ void display_draw_rect(display_handle_t* display, uint16_t x, uint16_t y,
         return;
     }
 
+    /* Draw 4 lines forming rectangle outline */
     ILI9341_DrawLine(x, y, x + width - 1, y, color);
     ILI9341_DrawLine(x + width - 1, y, x + width - 1, y + height - 1, color);
     ILI9341_DrawLine(x, y + height - 1, x + width - 1, y + height - 1, color);

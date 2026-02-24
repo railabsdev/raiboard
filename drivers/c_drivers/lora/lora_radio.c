@@ -1,11 +1,15 @@
 /**
  * @file lora_radio.c
  * @brief Bare-bones C LoRa radio driver implementation
+ * 
+ * This driver wraps the SX126x LoRaMac-node library with a clean C API.
+ * It handles initialization, configuration, TX/RX, and polling.
  */
 
 #include "lora_radio.h"
 #include <string.h>
 
+/* External LoRaMac-node radio functions */
 extern void Radio_Init(void);
 extern void Radio_SetChannel(uint32_t freq);
 extern void Radio_SetTxConfig(int8_t power, uint8_t bandwidth, 
@@ -71,7 +75,7 @@ static void lora_on_tx_timeout(void) {
     }
 }
 
-/*  API   */
+/* ===== API Implementation ===== */
 
 lora_config_t lora_get_default_config(void) {
     lora_config_t config = {

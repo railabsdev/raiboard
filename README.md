@@ -1,3 +1,87 @@
+# RAIBoard - Raspberry Pi Pico Game Development Framework
+
+> **Note**: This project has been recently refactored and merged. See [MERGE_SUMMARY.md](MERGE_SUMMARY.md) for complete details.
+
+A clean, modular game development framework for the Raspberry Pi Pico with ILI9341 display (240x320), XPT2046 touch screen, and SX126x LoRa radio support.
+
+## 🎮 Features
+
+- **Abstract Game Framework** - Object-oriented architecture with lifecycle hooks
+- **GameObject System** - Automatic entity management and collision detection  
+- **Hardware Abstraction** - Clean APIs for display, touch, and LoRa
+- **Working Examples** - Complete game samples (game1, LoRa demos)
+- **Modular Build System** - CMake + Ninja with proper dependency management
+
+## 🚀 Quick Start
+
+### Build & Flash
+
+```bash
+# Configure build
+mkdir build && cd build
+cmake -G Ninja ..
+
+# Build example game
+ninja game1
+
+# Flash to Pico (hold BOOTSEL while connecting USB)
+# Copy build/examples/game1/game1.uf2 to RPI-RP2 drive
+```
+
+## 📖 Key Documentation
+
+- **[MERGE_SUMMARY.md](MERGE_SUMMARY.md)** ⭐ - Complete refactoring changelog
+- **[GAME_FRAMEWORK_GUIDE.md](GAME_FRAMEWORK_GUIDE.md)** - Step-by-step game tutorials
+- **[Wiki](https://github.com/railabsdev/raiboard/wiki)** - Full documentation
+
+## 🎯 Creating Your First Game
+
+```cpp
+#include "Screen.hpp"
+#include "Game.hpp"
+
+class MyGame : public Game {
+public:
+    MyGame(Screen& screen) : Game(screen) {}
+    
+    void onInit() override { /* Initialize game */ }
+    void onUpdate(float deltaTime) override { /* Update logic */ }
+    void onRender() override { /* Draw game */ }
+};
+
+int main() {
+    stdio_init_all();
+    Screen screen;
+    MyGame game(screen);
+    game.run();
+    return 0;
+}
+```
+
+## 📁 Project Structure
+
+```
+raiboard/
+├── game/                   # Abstract game framework ⭐
+├── drivers/               # Hardware drivers (display, touch, LoRa)
+├── examples/
+│   ├── game1/            # Working game example ✅
+│   └── lora/             # LoRa radio examples
+├── displaylib_16bit_PICO/ # ILI9341 display library
+└── lora/                  # SX126x LoRa library
+```
+
+## 🌟 Project Status
+
+- ✅ Display library working
+- ✅ Touch input working
+- ✅ LoRa library functional
+- ✅ Game framework complete
+- ✅ Example game builds successfully
+- 🔄 Hardware testing recommended
+
+---
+
 # RaiBoard
 
 A modular Raspberry Pi Pico game development and LoRa communication platform with LoRa radio and ILI9341 display support.

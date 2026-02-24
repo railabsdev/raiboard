@@ -4,19 +4,19 @@
 #include <memory>
 #include <cstring>
 #include <cstdint>
-#include "Display.hpp"
+#include "Screen.hpp"
 #include "GameObject.hpp"
 
 class Game {
 protected:
-    Display& display;
+    Screen& screen;
     std::vector<std::unique_ptr<GameObject>> gameObjects;
     bool running;
     float deltaTime;
     uint32_t frameCount;
 
 public:
-    Game(Display& disp);
+    Game(Screen& scr);
     virtual ~Game() = default;
 
     // Main game loop - call this in your main() function
@@ -82,8 +82,11 @@ public:
     // Remove all game objects
     void clearGameObjects();
 
-    // Get reference to display
-    Display& getDisplay();
+    // Get reference to screen
+    Screen& getScreen();
+    
+    // Get reference to underlying display
+    ILI9341_TFT& getDisplay();
 
     // Virtual methods for user to override
 
